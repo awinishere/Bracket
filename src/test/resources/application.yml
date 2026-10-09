@@ -1,0 +1,72 @@
+# =============================================================================
+# Bracket – TEST configuration (used by `mvn test` / `@QuarkusTest`)
+# -----------------------------------------------------------------------------
+# This file lives under `src/test/resources`, so it is only visible on the
+# test classpath. When Quarkus runs unit tests it automatically activates the
+# `%test` profile AND loads this file; values here override the base
+# `src/main/resources/application.yml` without leaking into packaged builds.
+#
+# Design:
+#   * Datasource points at the DEDICATED test PostgreSQL service defined in
+#     src/main/docker/docker-compose.yaml:
+#       service name `database-test`, host localhost:5433, database
+#       `bracket_test`, schema `bracket`.
+#   * The schema is bootstrapped by the SAME script + migrations folder as
+#     the dev database, so tests exercise the exact same query surface as
+#     the running application.
+#   * Flyway is OFF: migrations are already applied by schema-init.sh on
+#     first boot; Hibernate then uses `create-drop` inside the test schema
+#     so entity-only changes (indexes, new tables) still propagate.
+#   * Pool is tolerant (`foreground-initial-size: 0`,
+#     `initialization-fail-timeout: -1`) so a plain `mvnw test` in CI —
+#     which has NO Docker — can still boot the Quarkus app for tests that
+#     don't touch the DB. Tests that DO hit the DB must first run
+#     `make docker-test-up` locally.
+# =============================================================================
+
+quarkus:
+  application:
+    name: bracket-test
+
+  log:
+    level: INFO
+    console:
+      format: "%d{HH:mm:ss} %-5p [%c{2.}] %s%e%n"
+
+  datasource:
+    db-kind: postgresql
+    devservices:
+      enabled: false
+    jdbc:
+      url: jdbc:postgresql://${POSTGRES_TEST_HOST:localhost}:${POSTGRES_TEST_PORT:5433}/${POSTGRES_TEST_DB:bracket_test}?currentSchema=${APP_SCHEMA:bracket}
+      acquisition-timeout: 5S
+      validation-timeout: 3S
+      max-size: 5
+      min-size: 0
+      initial-size: 0
+      foreground-initial-size: 0
+      initialization-fail-timeout: -1
+    username: ${POSTGRES_TEST_USER:bracket}
+    password: ${POSTGRES_TEST_PASSWORD:bracket}
+
+  hibernate-orm:
+    database:
+      default-schema: ${APP_SCHEMA:bracket}
+      default-catalog: ${POSTGRES_TEST_DB:bracket_test}
+      generation: create-drop
+    log:
+      sql: ${TEST_SQL_LOG:false}
+      bind-params: ${TEST_SQL_LOG:false}
+      schema: false
+
+  flyway:
+    enabled: false
+    migrate-at-start: false
+    clean-at-start: false
+
+  swagger-ui:
+    enabled: false
+
+  # ---- Test-specific HTTP port so `@QuarkusTest` never clashes with `make dev`
+  http:
+    port: ${TEST_HTTP_PORT:8081}

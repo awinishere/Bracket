@@ -1,0 +1,129 @@
+# =============================================================================
+# .gitattributes – Bracket
+# Normalise line endings across OSes and mark binary files so diffs / merges
+# never corrupt them.
+#
+# Rule of thumb: everything in this repo uses LF (Unix) line endings.
+# Windows users should also set:
+#   git config --global core.autocrlf input
+# =============================================================================
+
+# ---- Default: autodetect text, force LF -------------------------------------
+* text=auto eol=lf
+
+# ---- Java / JVM sources & resources -----------------------------------------
+*.java         text eol=lf
+*.kt           text eol=lf
+*.kts          text eol=lf
+*.groovy       text eol=lf
+*.scala        text eol=lf
+
+# ---- Build files ------------------------------------------------------------
+*.xml          text eol=lf
+pom.xml        text eol=lf merge=union
+*.gradle       text eol=lf
+mvnw           text eol=lf
+mvnw.cmd       text eol=crlf
+Makefile       text eol=lf
+*.mk           text eol=lf
+
+# ---- YAML / JSON / properties ----------------------------------------------
+*.yml          text eol=lf
+*.yaml         text eol=lf
+*.json         text eol=lf
+*.properties   text eol=lf
+*.toml         text eol=lf
+
+# ---- Docker -----------------------------------------------------------------
+Dockerfile*    text eol=lf
+*.dockerfile   text eol=lf
+.dockerignore  text eol=lf
+.docker-compos* text eol=lf
+
+# ---- Shell scripts ----------------------------------------------------------
+*.sh           text eol=lf
+*.bash         text eol=lf
+*.zsh          text eol=lf
+*.env          text eol=lf
+.env           text eol=lf
+.env.*         text eol=lf
+
+# ---- SQL / Flyway migrations (must be LF; Postgres is picky) ----------------
+*.sql          text eol=lf
+src/main/docker/schema/migrations/**  text eol=lf
+
+# ---- Web / frontend resources ----------------------------------------------
+*.html         text eol=lf
+*.htm          text eol=lf
+*.css          text eol=lf
+*.scss         text eol=lf
+*.js           text eol=lf
+*.jsx          text eol=lf
+*.ts           text eol=lf
+*.tsx          text eol=lf
+*.vue          text eol=lf
+
+# ---- Docs -------------------------------------------------------------------
+*.md           text eol=lf
+*.adoc         text eol=lf
+*.txt          text eol=lf
+LICENSE        text eol=lf
+NOTICE         text eol=lf
+
+# ---- Git config -------------------------------------------------------------
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+.gitconfig     text eol=lf
+gitignore      text eol=lf
+
+# ---- GitHub Actions / CI ----------------------------------------------------
+.github/**     text eol=lf
+
+# ---- IDE / editor files -----------------------------------------------------
+.editorconfig  text eol=lf
+.idea/**/*.xml text eol=lf
+.vscode/**/*.json text eol=lf
+
+# ---- Java keystore / crypto material ---------------------------------------
+*.pem          text eol=lf
+*.key          text eol=lf
+*.crt          text eol=lf
+*.csr          text eol=lf
+*.jks          binary
+*.pfx          binary
+
+# ---- Binary artefacts (never touch contents) --------------------------------
+*.jar          binary
+*.war          binary
+*.ear          binary
+*.class        binary
+*.zip          binary
+*.gz           binary
+*.tgz          binary
+*.bz2          binary
+*.xz           binary
+*.7z           binary
+*.rar          binary
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.gif          binary
+*.ico          binary
+*.webp         binary
+*.pdf          binary
+*.woff         binary
+*.woff2        binary
+*.ttf          binary
+*.otf          binary
+*.so           binary
+*.dylib        binary
+*.dll          binary
+*.exe          binary
+*.native       binary
+
+# ---- Generated / vendored files: skip from diffs ----------------------------
+target/        export-ignore
+.mvn/wrapper/maven-wrapper.jar binary export-ignore
+*.lock         -diff
+package-lock.json -diff linguist-generated=true
+yarn.lock      -diff linguist-generated=true

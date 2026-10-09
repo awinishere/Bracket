@@ -1,0 +1,99 @@
+# =============================================================================
+# Bracket – Quarkus BASE configuration
+# -----------------------------------------------------------------------------
+# This file contains only values that are common to every run stage.
+# Profile-specific overrides live in sibling files (dash naming, so that
+# Quarkus picks them up automatically when the profile is active):
+#
+#   application.yml        -> base (always loaded)
+#   application-dev.yml    -> loaded when profile=dev   (`make dev`)
+#   application-prod.yml   -> loaded when profile=prod  (`make start-prod`,
+#                                                         docker image, CI)
+#
+# The `default` stage (`make start`) has no dedicated file: it simply uses
+# the values below.
+#
+# The application NEVER uses the built-in `public` schema as its default.
+# All tables live in the `bracket` schema, which is created by
+# src/main/docker/schema/script/schema-init.sh on first Postgres boot.
+# Additional schemas declared on entities via @Table(schema = "...") are
+# auto-created in dev (see application-dev.yml).
+# =============================================================================
+
+quarkus:
+  application:
+    name: bracket
+    version: 1.0-SNAPSHOT
+
+  # ---- HTTP ---------------------------------------------------------------
+  http:
+    port: ${HTTP_PORT:8080}
+    host: ${HTTP_HOST:0.0.0.0}
+    cors: true
+    root-path: /
+
+  # ---- Logging ------------------------------------------------------------
+  log:
+    level: INFO
+    console:
+      format: "%d{yyyy-MM-dd HH:mm:ss} %-5p [%c{3.}] (%t) %s%e%n"
+
+  # ---- Datasource ---------------------------------------------------------
+  datasource:
+    db-kind: postgresql
+    devservices:
+      enabled: false      # we manage Postgres via docker-compose, not Dev Services
+    metrics:
+      enabled: false
+    jdbc:
+      url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:bracket}?currentSchema=${APP_SCHEMA:bracket}
+      acquisition-timeout: 10S
+      validation-timeout: 5S
+      leak-detection-interval: 0
+      max-size: ${DB_POOL_MAX:20}
+      min-size: ${DB_POOL_MIN:5}
+      initial-size: ${DB_POOL_MIN:5}
+      foreground-initial-size: 1
+    username: ${POSTGRES_USER:bracket}
+    password: ${POSTGRES_PASSWORD:bracket}
+
+  # ---- Hibernate ORM ------------------------------------------------------
+  hibernate-orm:
+    database:
+      default-schema: ${APP_SCHEMA:bracket}
+      default-catalog: ${POSTGRES_DB:bracket}
+      generation: update            # safe default; overridden per-profile
+    types:
+      json:
+        serializer: jackson
+    log:
+      schema: true
+
+  # ---- Flyway -------------------------------------------------------------
+  flyway:
+    migrate-at-start: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    clean-disabled: true
+    create-schemas: true
+    default-schema: ${APP_SCHEMA:bracket}
+    schemas: ${APP_SCHEMA:bracket}
+    locations: classpath:db/migration
+
+  # ---- OpenAPI / Swagger UI ----------------------------------------------
+  openapi:
+    path: /q/openapi
+    scan-packages: com.awn.bracket
+  swagger-ui:
+    path: /q/swagger-ui
+    always-display-openapi-models: true
+
+  # ---- Mailer (defaults; override via env in prod) ------------------------
+  mailer:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    from: ${MAIL_FROM:no-reply@bracket.local}
+
+  # NOTE: JWT / SmallRye-JWT configuration is intentionally omitted here.
+  # Provide `mp.jwt.verify.publickey.location` and `smallrye.jwt.sign.key.location`
+  # via environment variables once you add real signing material.

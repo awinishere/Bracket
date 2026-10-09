@@ -1,0 +1,53 @@
+# =============================================================================
+# Bracket – PROD profile (`make start-prod`, docker image, CI/CD release)
+# -----------------------------------------------------------------------------
+# Activated when QUARKUS_PROFILE=prod is set (which the packaged jar uses by
+# default, and `make start-prod` / the `app` service in docker-compose.yaml
+# set explicitly). Overrides values defined in application.yml; keys not
+# listed here fall through to the base file.
+#
+# Behaviour in prod:
+#   * Flyway owns every DDL change. Migration files live under
+#     src/main/resources/db/migration/ and MUST be complete for the current
+#     entity model.
+#   * Hibernate runs in `validate` – it fails fast when an entity is out of
+#     sync with the database instead of mutating production.
+#   * SQL logging is off, Swagger UI is hidden unless SWAGGER_UI_ENABLED=true
+#     is explicitly set.
+#   * JDBC host defaults to the compose service name `database`; override
+#     POSTGRES_HOST (or POSTGRES_JDBC_URL) when running outside compose.
+# =============================================================================
+
+quarkus:
+  log:
+    level: INFO
+    console:
+      json: false
+
+  datasource:
+    jdbc:
+      url: ${POSTGRES_JDBC_URL:jdbc:postgresql://${POSTGRES_HOST:database}:${POSTGRES_PORT:5432}/${POSTGRES_DB:bracket}?currentSchema=${APP_SCHEMA:bracket}}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  hibernate-orm:
+    database:
+      default-schema: ${APP_SCHEMA:bracket}
+      generation: validate
+    log:
+      sql: false
+      schema: false
+      bind-params: false
+
+  flyway:
+    enabled: true
+    migrate-at-start: true
+    clean-at-start: false
+    create-schemas: true
+    default-schema: ${APP_SCHEMA:bracket}
+    schemas: ${APP_SCHEMA:bracket}
+    locations: classpath:db/migration
+
+  swagger-ui:
+    enabled: ${SWAGGER_UI_ENABLED:false}
+    always-open: false

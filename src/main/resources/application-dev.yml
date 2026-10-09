@@ -1,0 +1,57 @@
+# =============================================================================
+# Bracket – DEV profile (`make dev`, `-Dquarkus.profile=dev`)
+# -----------------------------------------------------------------------------
+# Activated automatically by Quarkus dev mode and by any process that sets
+# QUARKUS_PROFILE=dev. Overrides values defined in application.yml; keys not
+# listed here fall through to the base file.
+#
+# Behaviour in dev:
+#   * Flyway is fully disabled. Base schema and dev tables come from
+#     src/main/docker/schema/migrations/*.sql, applied by
+#     src/main/docker/schema/script/schema-init.sh once when the Postgres
+#     data volume is empty. Restarting `make dev` therefore keeps existing
+#     rows – use `make docker-refresh` to re-run migrations from scratch.
+#   * Hibernate runs in `update`: it never drops what migrations already
+#     produced, but adds tables/columns for entities that are not yet in a
+#     migration file.
+#   * `hbm2ddl.create_namespaces=true` makes Hibernate emit `CREATE SCHEMA`
+#     for every schema referenced by an entity (`@Table(schema = "x"`), so
+#     those schemas are visible in Postgres without pre-writing them.
+# =============================================================================
+
+quarkus:
+  log:
+    level: DEBUG
+    console:
+      format: "%highlight{%-5p}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=magenta, TRACE=white} %d{HH:mm:ss} [%c{2.}] %s%e%n"
+
+  http:
+    port: ${HTTP_PORT:8080}
+
+  datasource:
+    jdbc:
+      url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:bracket}?currentSchema=${APP_SCHEMA:bracket}
+    username: ${POSTGRES_USER:bracket}
+    password: ${POSTGRES_PASSWORD:bracket}
+
+  hibernate-orm:
+    database:
+      default-schema: ${APP_SCHEMA:bracket}
+      generation: update
+      generation-hints:
+        # Native Hibernate hint – required for @Table(schema="x") to
+        # auto-create the schema when the entity is first seen.
+        create: hbm2ddl.create_namespaces=true
+    log:
+      sql: true
+      bind-params: true
+      schema: true
+      extract-group-by: false
+
+  flyway:
+    enabled: false
+    migrate-at-start: false
+    clean-at-start: false
+
+  swagger-ui:
+    always-open: true

@@ -1,0 +1,102 @@
+# =============================================================================
+# Bracket – UNIFIED docker compose (dev Postgres + test Postgres + app)
+# -----------------------------------------------------------------------------
+# Everything the project needs lives in this single file. Individual services
+# are started / stopped / refreshed by name via `make` targets:
+#
+#   make docker-up         -> start `database`        (dev, host port 5432)
+#   make docker-down       -> stop  `database`
+#   make docker-refresh    -> wipe  `database` volume + restart
+#   make docker-logs       -> tail  `database` log
+#
+#   make docker-test-up        -> start `database-test` (test, host port 5433)
+#   make docker-test-down      -> stop  `database-test`
+#   make docker-test-refresh   -> wipe  `database-test` volume + restart
+#   make docker-test-cli       -> psql  into `database-test`
+#
+#   make docker-build      -> build image bracket:latest
+#   make docker-start      -> start `app` container (waits for `database` healthy)
+#   make docker-stop       -> stop  `app` container
+#
+# Layout under ./schema (shared by `database` and `database-test`):
+#   schema/
+#   ├── script/            -> mounted into /docker-entrypoint-initdb.d
+#   │   └── schema-init.sh    (executed once on empty data volume)
+#   └── migrations/        -> mounted into /migrations (read by the .sh)
+#       └── *.sql               (dev-stage DDL; Flyway is disabled in dev
+#                                by application-dev.yml)
+#
+# `public` is intentionally NOT the default schema; schema-init.sh pins
+# `search_path` to `bracket` and revokes create on `public`.
+#
+# Every env var has a `${VAR:-fallback}` default so the file works even
+# without `.env`. In day-to-day use, `make` passes `--env-file .env` which
+# overrides those defaults.
+# =============================================================================
+name: ${COMPOSE_PROJECT_NAME:-bracket}
+
+services:
+  # ---- Dev database (used by `make dev`, `make start`, `make start-prod`) ---
+  database:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-bracket}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bracket}
+      POSTGRES_DB: ${POSTGRES_DB:-bracket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bracket}
+      # Consumed by src/main/docker/schema/script/schema-init.sh
+      APP_SCHEMA: ${APP_SCHEMA:-bracket}
+      APP_EXTRA_SCHEMAS: ${APP_EXTRA_SCHEMAS:-}
+      APP_MIGRATE_ON_START: ${APP_MIGRATE_ON_START:-true}
+      MIGRATIONS_DIR: /migrations
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./schema/script:/docker-entrypoint-initdb.d:ro
+      - ./schema/migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bracket} -d ${POSTGRES_DB:-bracket}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - bracket
+
+  # ---- Dedicated test database (used by `make test` / @QuarkusTest) ---------
+  # Same schema-init.sh + same migrations/*.sql as `database`, so unit tests
+  # run against the exact same query surface as the app. Kept isolated by
+  # its own volume + its own database name (`bracket_test`).
+  database-test:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME:-bracket}-test-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_TEST_USER:-bracket}
+      POSTGRES_DB: ${POSTGRES_TEST_DB:-bracket_test}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD:-bracket}
+      APP_SCHEMA: ${APP_SCHEMA:-bracket}
+      APP_EXTRA_SCHEMAS: ${APP_EXTRA_SCHEMAS:-}
+      APP_MIGRATE_ON_START: ${APP_MIGRATE_ON_START:-true}
+      MIGRATIONS_DIR: /migrations
+    ports:
+      - "${POSTGRES_TEST_PORT:-5433}:5432"
+    volumes:
+      - database-test:/var/lib/postgresql/data
+      - ./schema/script:/docker-entrypoint-initdb.d:ro
+      - ./schema/migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_TEST_USER:-bracket} -d ${POSTGRES_TEST_DB:-bracket_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - bracket
+
+volumes:
+  database:
+  database-test:
+

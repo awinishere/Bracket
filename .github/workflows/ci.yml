@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  unit-test:
+    name: Unit tests (JDK ${{ env.JAVA_VERSION }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
+      - name: Run unit tests
+        run: ./mvnw -B -ntp -DskipITs clean test
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-${{ github.run_number }}
+          path: target/surefire-reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Publish test summary
+        if: always()
+        run: |
+          {
+            echo "## Unit test summary"
+            echo ""
+            echo '```'
+            find target/surefire-reports -name '*.txt' -exec cat {} \; 2>/dev/null \
+              | grep -E "^(Tests run|Running)" | head -60 || echo "no surefire output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
