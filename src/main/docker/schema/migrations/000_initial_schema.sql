@@ -22,11 +22,7 @@
 -- the whole folder only when the volume is wiped, so a table that
 -- documents the bootstrap itself is enough.
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS schema_bootstrap (
-    id          BIGSERIAL    PRIMARY KEY,
-    filename    TEXT         NOT NULL UNIQUE,
-    applied_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
-);
+CREATE SCHEMA bucket;
 
 INSERT INTO schema_bootstrap (filename)
 VALUES ('000_initial_schema.sql')
