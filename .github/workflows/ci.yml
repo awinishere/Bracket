@@ -19,7 +19,7 @@ env:
 
 jobs:
   unit-test:
-    name: Unit tests (JDK ${{ env.JAVA_VERSION }})
+    name: Unit tests (JDK 21)
     runs-on: ubuntu-latest
 
     steps:
