@@ -85,3 +85,25 @@ quarkus:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
     from: ${MAIL_FROM:no-reply@bracket.local}
+
+  # ---- Object storage: Cloudflare R2 (S3-compatible) ----------------------
+  # R2 speaks the S3 API, so we reuse the AWS SDK v2 S3 client and point it
+  # at the R2 endpoint. Dev Services is disabled: there is no local S3 stack,
+  # the bucket lives in R2 and is configured purely via env vars.
+  s3:
+    devservices:
+      enabled: false
+    path-style-access: ${R2_PATH_STYLE:true}
+    endpoint-override: ${R2_ENDPOINT:https://127.0.0.1:9999}
+    aws:
+      region: ${R2_REGION:auto}
+      credentials:
+        type: static
+        static-provider:
+          access-key-id: ${R2_ACCESS_KEY_ID:access-key}
+          secret-access-key: ${R2_SECRET_ACCESS_KEY:secret-key}
+
+# ---- Application-specific (non-Quarkus-namespace) config ------------------
+bracket:
+  blob:
+    bucket: ${R2_BUCKET:bracket}
