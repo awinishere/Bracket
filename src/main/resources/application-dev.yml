@@ -21,9 +21,9 @@
 
 quarkus:
   log:
-    level: DEBUG
-    console:
-      format: "%highlight{%-5p}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=magenta, TRACE=white} %d{HH:mm:ss} [%c{2.}] %s%e%n"
+    category:
+      "com.awn.bracket":
+        level: DEBUG
 
   http:
     port: ${HTTP_PORT:8080}
@@ -39,13 +39,11 @@ quarkus:
       default-schema: ${APP_SCHEMA:bracket}
       generation: update
       generation-hints:
-        # Native Hibernate hint – required for @Table(schema="x") to
-        # auto-create the schema when the entity is first seen.
         create: hbm2ddl.create_namespaces=true
     log:
       sql: true
-      bind-params: true
-      schema: true
+      bind-params: false
+      schema: false
       extract-group-by: false
 
   flyway:

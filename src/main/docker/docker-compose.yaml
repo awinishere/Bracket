@@ -100,3 +100,9 @@ volumes:
   database:
   database-test:
 
+networks:
+  # Shared bridge network for `database`, `database-test` (and `app` when it
+  # is started via docker-compose.app.yaml / `make docker-start`).
+  bracket:
+    driver: bridge
+

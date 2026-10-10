@@ -93,7 +93,3 @@ quarkus:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
     from: ${MAIL_FROM:no-reply@bracket.local}
-
-  # NOTE: JWT / SmallRye-JWT configuration is intentionally omitted here.
-  # Provide `mp.jwt.verify.publickey.location` and `smallrye.jwt.sign.key.location`
-  # via environment variables once you add real signing material.
