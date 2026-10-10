@@ -1,4 +1,4 @@
-package com.awn.bracket.bucket.adapters.out.persistence;
+package com.awn.bracket.bucket.adapters.persistence;
 
 import com.awn.bracket.bucket.domain.Bucket;
 import com.awn.bracket.bucket.domain.VisibilityType;

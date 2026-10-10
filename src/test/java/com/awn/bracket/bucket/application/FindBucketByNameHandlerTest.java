@@ -27,7 +27,8 @@ class FindBucketByNameHandlerTest {
                         VisibilityType.PRIVATE, "ap-southeast-1",
                         LocalDateTime.now().minusDays(2), LocalDateTime.now())
         );
-        handler = new FindBucketByNameHandler(repository);
+        handler = new FindBucketByNameHandler();
+        handler.repository = repository;
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.awn.bracket.bucket.adapters.in.http.dto;
+package com.awn.bracket.bucket.adapters.http.dto;
 
 import com.awn.bracket.bucket.domain.Bucket;
 import com.awn.bracket.bucket.domain.VisibilityType;

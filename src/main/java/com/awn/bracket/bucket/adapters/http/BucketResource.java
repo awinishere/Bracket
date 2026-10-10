@@ -1,7 +1,7 @@
 package com.awn.bracket.bucket.adapters.http;
 
-import com.awn.bracket.bucket.adapters.in.http.dto.BucketResponse;
-import com.awn.bracket.bucket.adapters.in.http.dto.CreateBucketRequest;
+import com.awn.bracket.bucket.adapters.http.dto.BucketResponse;
+import com.awn.bracket.bucket.adapters.http.dto.CreateBucketRequest;
 import com.awn.bracket.bucket.domain.Bucket;
 import com.awn.bracket.bucket.ports.in.CreateBucketUseCase;
 import com.awn.bracket.bucket.ports.in.DeleteBucketUseCase;
@@ -51,7 +51,7 @@ public class BucketResource {
     @POST
     public Response create(@Valid CreateBucketRequest req) {
         Bucket saved = createBucket.create(req.name(), req.visibility(), req.region());
-        URI location = URI.create("/api/buckets/" + saved.id());
+        URI location = URI.create("/api/v1/buckets/" + saved.id());
         return Response.created(location).entity(BucketResponse.from(saved)).build();
     }
 
@@ -61,7 +61,7 @@ public class BucketResource {
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}}")
     public BucketResponse getById(@PathParam("id") UUID id) {
         return findBucketById.find(id)
                 .map(BucketResponse::from)

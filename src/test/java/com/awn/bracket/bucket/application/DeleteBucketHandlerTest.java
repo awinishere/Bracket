@@ -27,7 +27,8 @@ class DeleteBucketHandlerTest {
                 Bucket.restore(existingId, "old-media", VisibilityType.PRIVATE, "eu",
                         LocalDateTime.now().minusDays(5), LocalDateTime.now())
         );
-        handler = new DeleteBucketHandler(repository);
+        handler = new DeleteBucketHandler();
+        handler.repository = repository;
     }
 
     @Test

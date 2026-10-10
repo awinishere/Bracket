@@ -28,7 +28,8 @@ class FindBucketByIdHandlerTest {
                 Bucket.restore(seedId, "media", VisibilityType.PRIVATE, "eu",
                         LocalDateTime.now().minusDays(1), LocalDateTime.now())
         );
-        handler = new FindBucketByIdHandler(repository);
+        handler = new FindBucketByIdHandler();
+        handler.repository = repository;
     }
 
     @Test
