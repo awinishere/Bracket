@@ -14,16 +14,16 @@
 #   * Hibernate runs in `update`: it never drops what migrations already
 #     produced, but adds tables/columns for entities that are not yet in a
 #     migration file.
-#   * `hbm2ddl.create_namespaces=true` makes Hibernate emit `CREATE SCHEMA`
-#     for every schema referenced by an entity (`@Table(schema = "x"`), so
-#     those schemas are visible in Postgres without pre-writing them.
+#   * The `bucket` / `bracket` schemas referenced by entities via
+#     @Table(schema = "x") are created by the same init script, so Hibernate
+#     never needs to emit CREATE SCHEMA itself.
 # =============================================================================
 
 quarkus:
   log:
-    level: DEBUG
-    console:
-      format: "%highlight{%-5p}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=cyan, DEBUG=magenta, TRACE=white} %d{HH:mm:ss} [%c{2.}] %s%e%n"
+    category:
+      "com.awn.bracket":
+        level: DEBUG
 
   http:
     port: ${HTTP_PORT:8080}
@@ -37,16 +37,10 @@ quarkus:
   hibernate-orm:
     database:
       default-schema: ${APP_SCHEMA:bracket}
-      generation: update
-      generation-hints:
-        # Native Hibernate hint – required for @Table(schema="x") to
-        # auto-create the schema when the entity is first seen.
-        create: hbm2ddl.create_namespaces=true
+    schema-management:
+      strategy: update
     log:
       sql: true
-      bind-params: true
-      schema: true
-      extract-group-by: false
 
   flyway:
     enabled: false
@@ -54,4 +48,4 @@ quarkus:
     clean-at-start: false
 
   swagger-ui:
-    always-open: true
+    always-include: true

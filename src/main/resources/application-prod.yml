@@ -33,11 +33,10 @@ quarkus:
   hibernate-orm:
     database:
       default-schema: ${APP_SCHEMA:bracket}
-      generation: validate
+    schema-management:
+      strategy: validate
     log:
       sql: false
-      schema: false
-      bind-params: false
 
   flyway:
     enabled: true
@@ -50,4 +49,3 @@ quarkus:
 
   swagger-ui:
     enabled: ${SWAGGER_UI_ENABLED:false}
-    always-open: false
