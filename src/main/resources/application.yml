@@ -29,7 +29,6 @@ quarkus:
   http:
     port: ${HTTP_PORT:8080}
     host: ${HTTP_HOST:0.0.0.0}
-    cors: true
     root-path: /
 
   # ---- Logging ------------------------------------------------------------
@@ -62,12 +61,8 @@ quarkus:
     database:
       default-schema: ${APP_SCHEMA:bracket}
       default-catalog: ${POSTGRES_DB:bracket}
-      generation: update            # safe default; overridden per-profile
-    types:
-      json:
-        serializer: jackson
-    log:
-      schema: true
+    schema-management:
+      strategy: update            # safe default; overridden per-profile
 
   # ---- Flyway -------------------------------------------------------------
   flyway:
@@ -81,12 +76,9 @@ quarkus:
     locations: classpath:db/migration
 
   # ---- OpenAPI / Swagger UI ----------------------------------------------
-  openapi:
-    path: /q/openapi
-    scan-packages: com.awn.bracket
+  # The OpenAPI document is served at the extension default (/q/openapi).
   swagger-ui:
     path: /q/swagger-ui
-    always-display-openapi-models: true
 
   # ---- Mailer (defaults; override via env in prod) ------------------------
   mailer:

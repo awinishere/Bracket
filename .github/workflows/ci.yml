@@ -36,6 +36,23 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x ./mvnw
 
+      # BucketRepositoryAdapterTest (@QuarkusTest) queries a REAL Postgres,
+      # matching the defaults in src/test/resources/application.yml:
+      #   jdbc:postgresql://localhost:5433/bracket_test (user/pass: bracket)
+      # Hibernate drop-and-create needs the entity schemas to already exist.
+      - name: Start test Postgres (bracket_test on :5433)
+        run: |
+          docker run -d --name bracket-test-db \
+            -e POSTGRES_USER=bracket \
+            -e POSTGRES_PASSWORD=bracket \
+            -e POSTGRES_DB=bracket_test \
+            -p 5433:5432 \
+            postgres:16-alpine
+          timeout 60 bash -c 'until docker exec bracket-test-db pg_isready -U bracket -d bracket_test; do sleep 2; done'
+          docker exec bracket-test-db psql -U bracket -d bracket_test \
+            -c 'CREATE SCHEMA IF NOT EXISTS bucket;' \
+            -c 'CREATE SCHEMA IF NOT EXISTS bracket;'
+
       - name: Run unit tests
         run: ./mvnw -B -ntp -DskipITs clean test
 

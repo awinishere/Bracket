@@ -27,11 +27,10 @@ quarkus:
     database:
       default-schema: ${APP_SCHEMA:bracket}
       default-catalog: ${POSTGRES_TEST_DB:bracket_test}
-      generation: drop-and-create
+    schema-management:
+      strategy: drop-and-create
     log:
       sql: ${TEST_SQL_LOG:false}
-      bind-params: ${TEST_SQL_LOG:false}
-      schema: false
 
   flyway:
     enabled: false
